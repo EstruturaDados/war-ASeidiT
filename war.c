@@ -1,100 +1,56 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
+#include <stdlib.h>
 
 // --------- Constantes Globais -------------
 #define MAX_TERRITORIOS 5
 #define TAM_STRING 30
 
-// --------- Definição da estrutura (struct) --------
-struct Territorio {
+// 1. Definição da Estrutura (struct) para o Território
+typedef struct {
     char nome[TAM_STRING];
     char cor_do_exercito[TAM_STRING];
-    int quant_de_tropas;
+    int quant_tropas;
+} Territorio;
+
+
+int main() {
+    // 2. Declaração do Array de Estruturas
+    Territorio grupo[MAX_TERRITORIOS];
+    int i;
+
+    printf("BEM VINDO AO JOGO WAR EM LINGUAGEM C - ESTÁCIO - 2oSem2025\n\n");
+    printf("--- VAMOS COMEÇAR CADASTRANDO OS %d TERRITÓRIOS DO JOGO ---\n\n", MAX_TERRITORIOS);
+
+    // 3. Loop para o Cadastro dos grupos
+    for (i = 0; i < MAX_TERRITORIOS; i++) {
+                        
+        // Nome do grupo
+        printf("\nInforme o nome do %dº Território: ", i + 1);
+        // %49s para não ultrapassar o tamanho de 50 caracteres
+        // & comercial não é necessário para arrays de char (strings)
+        scanf("%49s", grupo[i].nome);
+        
+        // Cor do exército
+        printf("Informe a Cor do Exército do %dº Território: ", i + 1);
+        scanf("%49s", grupo[i].cor_do_exercito);
+        
+        // Quantidade de tropas
+        printf("Informe a Quantidade de Tropas do %dº Território: ", i + 1);
+        // Note o & comercial para variáveis do tipo int
+        scanf("%d", &grupo[i].quant_tropas);
+        
+        while(getchar() != '\n'); 
+    }
+
+    // 4. Print dos Territórios Cadastrados
+    printf("\n--- Territórios Cadastrados ---\n");
+    for (i = 0; i < MAX_TERRITORIOS; i++) {
+        printf("\nTerritório %d:\n", i + 1);
+        printf("  Nome: %s\n", grupo[i].nome);
+        printf("  Cor do Exército: %s\n", grupo[i].cor_do_exercito);
+        printf("  Quant de Tropas: %d\n", grupo[i].quant_tropas);
+    }
+
+    return 0;
 }
-
-// ------- Função principal (main) ---
-;int main(){
-    
-    struct Territorio grupo[MAX_TERRITORIOS];
-    int total_territorios = 0;
-    int opcao;
-
-    // ------ Laço Principal do Menu ------
-    
-        // -------- Exibe o menu de opções -----
-        printf("=======================================\n");
-        printf("CADASTRO DE TERRITÓRIOS\n");
-        printf("=======================================\n");
-        printf("ESCOLHA UMA OPÇÃO:\n");
-        printf("1 - Cadastrar novo território\n");
-        printf("2 - Listar todos os territórios\n");
-        printf("0 - Sair\n");
-        printf("=======================================\n");
-
-        // --- Lê a opção do jogador ---
-        scanf("%d", &opcao);
- 
-        // ----- Processamento da opção -----
-        switch (opcao) {
-        case 1: // Cadastro de novo território
-            printf("--- Cadastro de Novo Território ---\n\n");
-
-            if (total_territorios < MAX_TERRITORIOS) {
-                printf("Digite o nome do território:\n");
-                fgets(grupo[total_territorios].nome, TAM_STRING, stdin);
-
-                printf("Digite a cor do exército:\n");
-                fgets(grupo[total_territorios].cor_do_exercito, TAM_STRING, stdin);
-
-                printf("Informe a quantidade de tropas:\n");
-                scanf("%d", &grupo[total_territorios].quant_de_tropas);
-
-                total_territorios++;
-
-                printf("Território cadastrado com sucesso!\n");
-            } else {
-                printf("Número máximo de territórios cadastrados!\n");
-            }
-
-            printf("\nPressione Enter para continuar...");
-            getchar(); // --- Pausa para o jogador ler a mensagem antes de voltar ao menu ---                        
-            break;
-        
-        case 2: // ------- Listagem de territórios --------
-            printf("Lista de territórios cadastrados:\n\n");
-
-            if (total_territorios == 0)
-            {
-                printf("Nenhum território cadastrado!\n");
-                getchar();
-                
-            } else {
-                for (int i = 0; i < total_territorios; i++)
-                {
-                    printf("------------------------------\n");
-                    printf("Nome: %s\n", grupo[i].nome);
-                    printf("Cor do exército: %s\n", grupo[i].cor_do_exercito);
-                    printf("Quantidade de tropas: %d\n", grupo[i].quant_de_tropas);
-                }
-                printf("------------------------------\n");                
-            }
-            
-            printf("\nPressione Enter para continuar...");
-            getchar(); // --- Pausa para o jogador ler a mensagem antes de voltar ao menu ---                        
-            break;
-        
-        case 0: // ------ SAIR -------
-            printf("Saindo do sistema...\n");
-            break;
-        
-        default: // ------ Opção inválida -------
-            printf("\nOpção inválida! Tente novamente...\n");
-            printf("\nPressione Enter para continuar...");
-            getchar();
-            break;
-        }
-
-
-return 0;
-};
