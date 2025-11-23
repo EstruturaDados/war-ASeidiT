@@ -1,112 +1,261 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
-// --------- Constantes Globais -------------
-#define MAX_TERRITORIOS 5
-#define TAM_STRING 30
-
-// --------- Definição da estrutura (struct) --------
-struct territorio {
-    char nome[TAM_STRING];
-    char cor_do_exercito[TAM_STRING];
+// --------- Definição da estrutura --------
+typedef struct territorio {
+    char nome[30];
+    char cor_do_exercito[30];
     int quant_de_tropas;
-};
+} Territorio;
 
 //Limpar o buffer de entrada
-void limparBufferEntrada(){
+void limparBufferEntrada() {
     int c;
     while ((c = getchar()) != '\n' && c != EOF);
 }
 
-// ------- Função principal (main) ---
-int main(){
-    struct territorio grupo[MAX_TERRITORIOS];
-    int total_territorios = 0;
+// ---------- Função de ataque ------------
+void atacar(Territorio* atacante, Territorio* defensor) {
+
+repetir_ataque:  // usando repetição em caso de empate
+
+    if (atacante->quant_de_tropas <= 1) {
+        printf("O território atacante precisa ter mais de 1 tropa para atacar!\n");
+        return;
+    }
+
+    printf("\n===== INÍCIO DO ATAQUE =====\n");
+    printf("%s (%s) ATACANDO %s (%s)\n",
+           atacante->nome, atacante->cor_do_exercito,
+           defensor->nome, defensor->cor_do_exercito);
+
+    int dado_atq = (rand() % 6) + 1;
+    int dado_def = (rand() % 6) + 1;
+
+    printf("Dado do atacante: %d\n", dado_atq);
+    printf("Dado do defensor: %d\n", dado_def);
+
+    // EMPATE → repete o ataque
+    if (dado_atq == dado_def) {
+        printf("Empate! Jogando os dados novamente...\n");
+        goto repetir_ataque;
+    }
+
+    // ATACANTE VENCE
+    if (dado_atq > dado_def) {
+        printf("RESULTADO: Atacante venceu o combate!\n");
+
+        atacante->quant_de_tropas += 1;  // bônus
+        defensor->quant_de_tropas -= 1;  // perda
+
+        // DEFENSOR PERDE TODAS AS TROPAS → CONQUISTA
+        if (defensor->quant_de_tropas <= 0) {
+            printf("O defensor perdeu todas as tropas! Território conquistado!\n");
+
+            strcpy(defensor->cor_do_exercito, atacante->cor_do_exercito);
+
+            defensor->quant_de_tropas = 1; // tropa inicial do território conquistado
+            atacante->quant_de_tropas -= 1; // atacante envia 1 tropa para ocupar
+        }
+    }
+    // DEFENSOR VENCE
+    else {
+        printf("RESULTADO: Defensor venceu o combate!\n");
+
+        defensor->quant_de_tropas += 1; // bônus
+        atacante->quant_de_tropas -= 1; // perda
+
+        // ATACANTE PERDE TODAS AS TROPAS → DEFENSOR CONQUISTA
+        if (atacante->quant_de_tropas <= 0) {
+            printf("O atacante perdeu todas as tropas! Território conquistado pelo defensor!\n");
+
+            strcpy(atacante->cor_do_exercito, defensor->cor_do_exercito);
+
+            atacante->quant_de_tropas = 1;
+            defensor->quant_de_tropas -= 1;
+        }
+    }
+
+    printf("\n===== SITUAÇÃO PÓS-ATAQUE =====\n");
+    printf("Atacante -> %s | Tropas: %d | Cor: %s\n",
+           atacante->nome, atacante->quant_de_tropas, atacante->cor_do_exercito);
+
+    printf("Defensor -> %s | Tropas: %d | Cor: %s\n",
+           defensor->nome, defensor->quant_de_tropas, defensor->cor_do_exercito);
+
+    printf("=================================\n");
+}
+
+// ---------- FUNÇÃO PRINCIPAL ----------
+int main() {
+    srand(time(NULL));
+
+    int total_territorios;
+    Territorio* grupo;
     int opcao;
 
-    // ------ Laço Principal do Menu ------
+    printf("=======================================\n");
+    printf("BEM VINDO AO JOGO WAR EM LINGUAGEM C!\n");
+    printf("=======================================\n");
+
+    // -------- PERMITIR O USUÁRIO ESCOLHER QUANTOS TERRITÓRIOS O JOGO VAI TER --------
     do {
-        // -------- Exibe o menu de opções -----
+        printf("Informe quantos territórios o jogo vai ter (mínimo 2 e máximo 5): ");
+        scanf("%d", &total_territorios);
+        limparBufferEntrada();
+
+        if (total_territorios < 2 || total_territorios > 5) {
+            printf("Valor inválido! Digite um número entre 2 e 5.\n\n");
+        }
+
+    } while (total_territorios < 2 || total_territorios > 5);
+    // ---------------------------------------
+
+    // ----------- USANDO ALOCAÇÃO DINÂMICA COM MALLOC -----------
+    grupo = (Territorio*) malloc(total_territorios * sizeof(Territorio));
+    if (grupo == NULL) {
+        printf("Erro ao alocar memória!\n");
+        return 1;
+    }
+
+    int cadastrados = 0;
+
+    // ------------------- MENU DE OPÇÕES -------------------
+    do {
+        printf("\n=======================================\n");
+        printf("LISTA DE OPÇÕES\n");
         printf("=======================================\n");
-        printf("BEM VINDO AO JOGO WAR EM LINGUAGEM C!\n\n");
-        printf("CADASTRO DE TERRITÓRIOS\n");
-        printf("=======================================\n");
-        printf("OPÇÕES:\n");
         printf("1 - Cadastrar novo território\n");
-        printf("2 - Listar todos os territórios\n");
+        printf("2 - Listar territórios\n");
+        printf("3 - Simular ataque\n");
         printf("0 - Sair\n");
         printf("=======================================\n");
         printf("ESCOLHA UMA OPÇÃO: ");
+        
+        char entrada[20];
+        fgets(entrada, sizeof(entrada), stdin);
+        if (sscanf(entrada, "%d", &opcao) != 1) {
+            opcao = -1;
+        }
 
-        // --- Lê a opção do jogador ---
-        scanf("%d", &opcao);
-        limparBufferEntrada(); //Limpa o '\n' deixado pelo scanf
- 
-        // ----- Processamento da opção -----
         switch (opcao) {
-            case 1: // Cadastro de novo território
+
+        case 1:
+            if (cadastrados < total_territorios) {
                 printf("--- Cadastro de Novo Território ---\n\n");
 
-                if (total_territorios < MAX_TERRITORIOS) {
-                    printf("Digite o nome do território (SEM ACENTOS OU CARACTERES ESPECIAIS): ");
-                    fgets(grupo[total_territorios].nome, TAM_STRING, stdin);
+                printf("Nome do território: ");
+                fgets(grupo[cadastrados].nome, 30, stdin);
 
-                    printf("Digite a cor do exército: ");
-                    fgets(grupo[total_territorios].cor_do_exercito, TAM_STRING, stdin);
+                printf("Cor do exército: ");
+                fgets(grupo[cadastrados].cor_do_exercito, 30, stdin);
 
-                    grupo[total_territorios].nome[strcspn(grupo[total_territorios].nome, "\n")] = '\0';
-                    grupo[total_territorios].cor_do_exercito[strcspn(grupo[total_territorios].cor_do_exercito, "\n")] = '\0';
+                grupo[cadastrados].nome[strcspn(grupo[cadastrados].nome, "\n")] = '\0';
+                grupo[cadastrados].cor_do_exercito[strcspn(grupo[cadastrados].cor_do_exercito, "\n")] = '\0';
 
-                    printf("Informe a quantidade de tropas: ");
-                    scanf("%d", &grupo[total_territorios].quant_de_tropas);
-                    limparBufferEntrada();
+                printf("Quantidade de tropas: ");
+                scanf("%d", &grupo[cadastrados].quant_de_tropas);
+                limparBufferEntrada();
 
-                    total_territorios++;
+                cadastrados++;
 
-                    printf("\nTerritório cadastrado com sucesso!\n");
+                printf("\nTerritório cadastrado com sucesso!\n");
             } else {
-                printf("Número máximo de territórios cadastrados!\n");
+                printf("Limite máximo de territórios atingido!\n");
             }
 
-            printf("\nPressione ENTER para continuar...");
-            getchar(); // --- Pausa para o jogador ler a mensagem antes de voltar ao menu ---                        
+            printf("Pressione ENTER para continuar...");
+            getchar();
             break;
-        
-        case 2: // ------- Listagem de territórios --------
-            printf("Lista de territórios cadastrados:\n\n");
 
-            if (total_territorios == 0){
+        case 2:
+            printf("\n----- LISTA DE TERRITÓRIOS -----\n");
+
+            if (cadastrados == 0) {
                 printf("Nenhum território cadastrado!\n");
-            }
-            else {
-                for (int i = 0; i < total_territorios; i++){
-                    printf("------------------------------\n");
-                    printf("TERRITÓRIO %d\n", i+1);
+            } else {
+                for (int i = 0; i < cadastrados; i++) {
+                    printf("\nTERRITÓRIO %d\n", i + 1);
                     printf("Nome: %s\n", grupo[i].nome);
-                    printf("Cor do exército: %s\n", grupo[i].cor_do_exercito);
-                    printf("Quantidade de tropas: %d\n", grupo[i].quant_de_tropas);
+                    printf("Cor: %s\n", grupo[i].cor_do_exercito);
+                    printf("Tropas: %d\n", grupo[i].quant_de_tropas);
                 }
-                printf("------------------------------\n");                
             }
-            
-            //Pausa para o jogador ler, antes do próximo loop limpar a tela
-            printf("\nPressione ENTER para continuar...");
-            getchar(); // --- Pausa para o jogador ler a mensagem antes de voltar ao menu ---                        
-            break;
-        
-        case 0: // ------ SAIR -------
-            printf("\nSaindo do jogo...\n");
-            break;
-        
-        default: // ------ Opção inválida -------
-            printf("\nOpção inválida! Tente novamente...\n");
+
             printf("\nPressione ENTER para continuar...");
             getchar();
             break;
+
+        // -------------------------- CASE 3 MODIFICADO --------------------------
+        case 3: // ATAQUE
+            if (cadastrados < 2) {
+                printf("Cadastre ao menos 2 territórios para simular ataques!\n\n");
+                printf("Pressione ENTER para continuar...");
+                getchar();
+                break;
+            }
+
+            // ---- LISTAR TERRITÓRIOS DISPONÍVEIS PARA ATAQUE ----
+            printf("\n----- TERRITÓRIOS DISPONÍVEIS -----\n");
+
+            for (int i = 0; i < cadastrados; i++) {
+                printf("%d - %s | Cor: %s | Tropas: %d\n",
+                       i + 1,
+                       grupo[i].nome,
+                       grupo[i].cor_do_exercito,
+                       grupo[i].quant_de_tropas);
+            }
+
+            printf("-------------------------------------\n\n");
+
+            int a, d;
+
+            printf("Escolha o número do território ATACANTE: ");
+            scanf("%d", &a);
+            limparBufferEntrada();
+
+            printf("Escolha o número do território DEFENSOR: ");
+            scanf("%d", &d);
+            limparBufferEntrada();
+
+            if (a < 1 || a > cadastrados || d < 1 || d > cadastrados) {
+                printf("Território inválido!\n");
+                printf("Pressione ENTER para continuar...");
+                getchar();
+                break;
+            }
+
+            if (a == d) {
+                printf("Um território não pode atacar ele mesmo!\n");
+                printf("Pressione ENTER para continuar...");
+                getchar();
+                break;
+            }
+
+            atacar(&grupo[a - 1], &grupo[d - 1]);
+
+            printf("\nPressione ENTER para continuar...");
+            getchar();
+            break;
+        // -----------------------------------------------------------------------
+
+        case 0:
+            printf("Saindo do jogo...\n");
+            printf("Pressione ENTER para finalizar...");
+            getchar();
+            break;
+
+        default:
+            printf("Opção inválida!\n");
+            printf("Pressione ENTER para continuar...");
+            getchar();
+            break;
         }
-    
-    }while (opcao != 0);
-    
+
+    } while (opcao != 0);
+
+    free(grupo);
     return 0;
-};
+}
